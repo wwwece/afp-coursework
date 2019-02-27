@@ -11,6 +11,7 @@ main = do
 
 
 -- TODO: TYPE SIGNATURE
+-- askQuestions :: Foldable t => t String -> IO b
 askQuestions story = do
   putStr "ASK A QUESTION: "
   question <- getLine
@@ -20,6 +21,7 @@ askQuestions story = do
 
 
 -- TODO: TYPE SIGNATURE
+-- answer :: Foldable t => [[Char]] -> t String -> IO ()
 answer question@(q1:q2:qs) story
   | q1 == "Is"                    = putStrLn $ case (answerIs question story) of 
                                                     Just True  -> "yes"
@@ -32,13 +34,21 @@ answer question@(q1:q2:qs) story
   | otherwise                     = putStrLn "maybe"
 
 
--- TODO: TYPE SIGNATURE
-answerIs (_:who:_:_:location:_) story = 
-  foldl (\acc s -> if who `elem` (words s) && location `elem` (words s) 
-                   then Just True 
-                   else if who `elem` (words s) 
-                        then Just False 
-                        else acc) Nothing story
+-- Pattern in IS-questions: (Is:Name:In:The:Location:?)
+answerIs :: Foldable t => [String] -> t String -> Maybe Bool
+answerIs (_:name:_:_:location:_) story = 
+  foldl (\acc statement -> let s = (words statement) in
+                           if name `elem` s
+                           then if location `elem` s && not ("no" `elem` s) && not ("either" `elem` s)
+                                then Just True -- location found without negation or either statement
+                                else if ("no" `elem` s && location `elem` s) || (not ("no" `elem` s) && not ("either" `elem` s))
+                                     then Just False -- not in this particular location OR in some other location
+                                     else if "no" `elem` s && not (location `elem` s)
+                                          then Nothing -- No longer in some other location, so can possibly be in this location.
+                                          else if "either" `elem` s && location `elem` s
+                                               then Nothing -- Is either in this location, or some other location
+                                               else acc
+                           else acc) Nothing story
 answerIs _ _ = Nothing
 
 
