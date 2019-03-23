@@ -1,7 +1,7 @@
 Task 1
 Is Mary in the kitchen ?  yes	
 Is Daniel in the bedroom ?  no	
-Is John in the office ?  yes
+Is John in the office ?  no
 Is Sandra in the hallway ?  maybe
 
 Task 2
@@ -23,10 +23,10 @@ Is Fred in the office ?  no
 Is Bill in the park ?  no
 
 Task 5
-Where was Sandra before the school? 	cinema
-Where was Bill before the school? 	park
-Where was Fred after the school? 		park
-Where was Sandra after the school? 	don't know
+Where was Sandra before the school?  cinema
+Where was Bill before the school?  park
+Where was Fred after the school?  park
+Where was Sandra after the school?  don't know
 
 Task 6
 How do you go from the kitchen to the office ?  east, north

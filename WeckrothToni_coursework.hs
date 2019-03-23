@@ -14,17 +14,19 @@ main = do
 -- TODO: TYPE SIGNATURE
 -- askQuestions :: Foldable t => t String -> IO b
 askQuestions story = do
-  putStr "ASK A QUESTION: "
+  putStr "ASK A QUESTION or (q)uit: "
   question <- getLine
-  putStr $ question ++ " "
-  answer (words question) story
-  askQuestions story
+  if map toLower question == "q" || map toLower question == "quit"
+    then do return ()
+    else do putStr $ question ++ " "
+            answer (words question) story
+            askQuestions story
 
 
 -- TODO: TYPE SIGNATURE
 -- answer :: Foldable t => [[Char]] -> t String -> IO ()
 answer question@(word1:word2:_) story
-  | w1 == "is"                     = putStrLn $ answerIs question story
+  | w1 == "is"                    = putStrLn $ answerIs question story
   | w1 == "where" && w2 == "is"   = putStrLn $ answerWhereIs question story
   | w1 == "where" && w2 == "was"  = putStrLn $ word1 ++ word2
   | w1 == "how"   && w2 == "many" = putStrLn $ word1 ++ word2
@@ -71,7 +73,7 @@ answerWhere _ _ = "don't know"
 
 -- Checks where is a person with a given name
 -- TODO: TYPE SIGNATURE
-whereIsPerson Nothing _ = "don't know"
+whereIsPerson Nothing     _     = "don't know"
 whereIsPerson (Just name) story = 
   foldl (\loc statement -> 
         let (word1:word2:_) = words $ map toLower statement 
