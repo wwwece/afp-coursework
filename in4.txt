@@ -3,3 +3,4 @@ Is Daniel in the office ?
 Is Sandra in the bedroom ?
 Is Fred in the office ?
 Is Bill in the park ?
+q

@@ -29,7 +29,7 @@ answer question@(word1:word2:_) story
   | w1 == "is"                    = putStrLn $ answerIs question story
   | w1 == "where" && w2 == "is"   = putStrLn $ answerWhereIs question story
   | w1 == "where" && w2 == "was"  = putStrLn $ answerWhereWas question story
-  | w1 == "how"   && w2 == "many" = putStrLn $ answerHowMany question story
+  | w1 == "how"   && w2 == "many" = putStrLn $ maybe2string $ answerHowMany question story
   | w1 == "how"   && w2 == "do"   = putStrLn $ answerHowDoYouGo question story
   | otherwise                     = putStrLn "I don't understand!"
   where w1 = map toLower word1
@@ -37,7 +37,7 @@ answer question@(word1:word2:_) story
 
 
 -- Pattern in IS-questions: (is:name:in:the:location:?)
--- answerIs :: Foldable t => [String] -> t String -> Maybe Bool
+-- TODO: answerIs :: Foldable t => [String] -> t String -> Maybe Bool
 answerIs (_:name:_:_:location:_) story = 
   foldl (\answer statement -> 
         let s     = words $ map toLower statement
@@ -68,21 +68,17 @@ answerWhereIs (_:_:_:item:_) story =
                            then Just (head $ words statement) -- Name of the person posessing the item
                            else person
                 ) Nothing story) story
-answerWhere _ _ = "don't know"
-
-
--- Checks where is a person with a given name
--- TODO: TYPE SIGNATURE
-whereIsPerson Nothing     _     = "don't know"
-whereIsPerson (Just name) story = 
-  foldl (\loc statement -> 
-        let (word1:word2:_) = words $ map toLower statement 
-            name' = map toLower name
-        in  if name' == word1 && word2 `elem` ["moved","went","journeyed"]
-            then last $ words statement
-            else loc
-  ) "don't know" story
-
+  -- Checks where is a person with a given name
+  where whereIsPerson Nothing     _     = "don't know"
+        whereIsPerson (Just name) story = 
+          foldl (\loc statement -> 
+                let (person:verb:_) = words $ map toLower statement 
+                    name' = map toLower name
+                in  if name' == person && verb `elem` ["moved","went","journeyed"]
+                    then last $ words statement
+                    else loc
+          ) "don't know" story
+answerWhereIs _ _ = "don't know"
 
 
 -- TODO: TYPE SIGNATURE
@@ -91,7 +87,31 @@ answerWhereWas (_:_:person:time:location:_) story = "TODO (Where was...)"
 
 -- TODO: TYPE SIGNATURE
 -- Pattern in HOW MANY -questions (how:many:objects:is:person:carrying:?)
-answerHowMany (_:_:_:_:person:_:_) story = "TODO (How many...)"
+-- Verbs: took, got, discarded, picked & HANDED to
+answerHowMany (_:_:_:_:person:_:_) story = 
+  foldl (\answer statement -> 
+    let stm@(name:verb:_:_:_) = words $ map toLower statement
+        person' = map toLower person
+        stmTail = last $ words $ map toLower statement
+    in  if person' == name
+        then countObject answer verb
+        else if verb `elem` ["handed"] && person' == stmTail
+             then if answer == Nothing 
+                  then Just 1
+                  else Just (+1) <*> answer
+             else answer
+  ) Nothing story
+  where countObject Nothing verb = countObject (Just 0) verb
+        countObject answer  verb = 
+          if verb `elem` ["discarded"] 
+          then Just (subtract 1) <*> answer
+          else if verb `elem` ["took", "got", "picked"]
+               then Just (+1) <*> answer
+               else if verb `elem` ["handed"]
+                    then Just (subtract 1) <*> answer
+                    else answer
+answerHowMany _ _ = Nothing
+
 
 -- TODO: TYPE SIGNATURE
 -- Pattern in HOW DO YOU GO -questions (how:do:you:go:from:the:location:to:the:location:?)
@@ -112,3 +132,15 @@ prettyPrintList :: [String] -> IO ()
 prettyPrintList []     = do putStrLn "> END OF STORY.\n"
 prettyPrintList (x:xs) = do putStrLn ("  " ++ x)
                             prettyPrintList xs
+
+maybe2string :: Show a => Maybe a -> String
+maybe2string Nothing = "don't know"
+maybe2string (Just x) = show x
+
+
+
+
+
+
+
+

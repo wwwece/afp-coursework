@@ -1,0 +1,6 @@
+How many objects is Mary carrying ?
+How many objects is Sandra carrying ?
+How many objects is Daniel carrying ?
+How many objects is John carrying ?
+How many objects is Toni carrying ?
+q

@@ -2,3 +2,4 @@ Is Mary in the kitchen ?
 Is Daniel in the bedroom ? 
 Is John in the office ? 
 Is Sandra in the hallway ? 
+q
