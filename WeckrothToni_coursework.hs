@@ -27,7 +27,7 @@ askQuestions story = do
 -- answer :: Foldable t => [[Char]] -> t String -> IO ()
 answer question@(word1:word2:_) story
   | w1 == "is"                    = putStrLn $ answerIs question story
-  | w1 == "where" && w2 == "is"   = putStrLn $ answerWhereIs question story
+  | w1 == "where" && w2 == "is"   = putStrLn $ maybeStr2string $ answerWhereIs question story
   | w1 == "where" && w2 == "was"  = putStrLn $ maybeStr2string $ answerWhereWas question story
   | w1 == "how"   && w2 == "many" = putStrLn $ maybe2string $ answerHowMany question story
   | w1 == "how"   && w2 == "do"   = putStrLn $ answerHowDoYouGo question story
@@ -68,17 +68,16 @@ answerWhereIs (_:_:_:item:_) story =
                            then Just (head $ words statement) -- Name of the person posessing the item
                            else person
                 ) Nothing story) story
-  -- Checks where is a person with a given name
-  where whereIsPerson Nothing     _     = "don't know"
+  where whereIsPerson Nothing     _     = Nothing
         whereIsPerson (Just name) story = 
           foldl (\loc statement -> 
                 let (person:verb:_) = words $ map toLower statement 
                     name' = map toLower name
                 in  if name' == person && verb `elem` ["moved","went","journeyed"]
-                    then last $ words statement
+                    then Just (last $ words statement)
                     else loc
-          ) "don't know" story
-answerWhereIs _ _ = "don't know"
+          ) Nothing story
+answerWhereIs _ _ = Nothing
 
 
 -- TODO: TYPE SIGNATURE
@@ -160,11 +159,4 @@ maybe2string (Just x) = show x
 maybeStr2string :: Maybe String -> String
 maybeStr2string Nothing = "don't know"
 maybeStr2string (Just x) = x
-
-
-
-
-
-
-
 
