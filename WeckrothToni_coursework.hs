@@ -28,9 +28,9 @@ askQuestions story = do
 answer question@(word1:word2:_) story
   | w1 == "is"                    = putStrLn $ answerIs question story
   | w1 == "where" && w2 == "is"   = putStrLn $ answerWhereIs question story
-  | w1 == "where" && w2 == "was"  = putStrLn $ word1 ++ word2
-  | w1 == "how"   && w2 == "many" = putStrLn $ word1 ++ word2
-  | w1 == "how"   && w2 == "do"   = putStrLn $ word1 ++ word2
+  | w1 == "where" && w2 == "was"  = putStrLn $ answerWhereWas question story
+  | w1 == "how"   && w2 == "many" = putStrLn $ answerHowMany question story
+  | w1 == "how"   && w2 == "do"   = putStrLn $ answerHowDoYouGo question story
   | otherwise                     = putStrLn "I don't understand!"
   where w1 = map toLower word1
         w2 = map toLower word2
@@ -59,7 +59,7 @@ answerIs _ _ = "maybe"
 
 
 -- TODO: TYPE SIGNATURE
--- Pattern in WHERE-questions (where:is:the:item:?)
+-- Pattern in WHERE IS -questions (where:is:the:item:?)
 answerWhereIs (_:_:_:item:_) story = 
   whereIsPerson (foldl (\person statement -> 
                        let s = words $ map toLower statement
@@ -82,6 +82,20 @@ whereIsPerson (Just name) story =
             then last $ words statement
             else loc
   ) "don't know" story
+
+
+
+-- TODO: TYPE SIGNATURE
+-- Pattern in WHERE WAS -questions (where:was:person:before/after:location:?)
+answerWhereWas (_:_:person:time:location:_) story = "TODO (Where was...)"
+
+-- TODO: TYPE SIGNATURE
+-- Pattern in HOW MANY -questions (how:many:objects:is:person:carrying:?)
+answerHowMany (_:_:_:_:person:_:_) story = "TODO (How many...)"
+
+-- TODO: TYPE SIGNATURE
+-- Pattern in HOW DO YOU GO -questions (how:do:you:go:from:the:location:to:the:location:?)
+answerHowDoYouGo (_:_:_:_:_:_:location1:_:_:location2:_) story = "TODO (How do you go...)"
 
 
 -- ----------------------- --
