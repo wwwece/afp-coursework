@@ -1,4 +1,3 @@
-
 import System.Environment
 import System.IO
 import Data.Char (toLower)
@@ -6,13 +5,11 @@ import Data.Char (toLower)
 main :: IO ()
 main = do 
   story <- getStory
-  putStrLn "\n> THE STORY:"
   prettyPrintList story
   askQuestions story
 
 
--- TODO: TYPE SIGNATURE
--- askQuestions :: Foldable t => t String -> IO b
+askQuestions :: Foldable t => t String -> IO ()
 askQuestions story = do
   putStr "ASK A QUESTION or (q)uit: "
   question <- getLine
@@ -23,8 +20,7 @@ askQuestions story = do
             askQuestions story
 
 
--- TODO: TYPE SIGNATURE
--- answer :: Foldable t => [[Char]] -> t String -> IO ()
+answer :: Foldable t => [[Char]] -> t [Char] -> IO ()
 answer question@(word1:word2:_) story
   | w1 == "is"                    = putStrLn $ answerIs question story
   | w1 == "where" && w2 == "is"   = putStrLn $ maybeStr2string $ answerWhereIs question story
@@ -37,7 +33,7 @@ answer question@(word1:word2:_) story
 
 
 -- Pattern in IS-questions: (is:name:in:the:location:?)
--- TODO: answerIs :: Foldable t => [String] -> t String -> Maybe Bool
+answerIs :: Foldable t => [String] -> t String -> String
 answerIs (_:name:_:_:location:_) story = 
   foldl (\answer statement -> 
         let s     = words $ map toLower statement
@@ -58,8 +54,9 @@ answerIs (_:name:_:_:location:_) story =
 answerIs _ _ = "maybe"
 
 
--- TODO: TYPE SIGNATURE
 -- Pattern in WHERE IS -questions (where:is:the:item:?)
+-- Verbs: moved, went, journeyed
+answerWhereIs :: Foldable t => [String] -> t String -> Maybe String
 answerWhereIs (_:_:_:item:_) story = 
   whereIsPerson (foldl (\person statement -> 
                        let s = words $ map toLower statement
@@ -80,8 +77,8 @@ answerWhereIs (_:_:_:item:_) story =
 answerWhereIs _ _ = Nothing
 
 
--- TODO: TYPE SIGNATURE
--- Pattern in WHERE WAS -questions (where:was:person:before/after:location:?)
+-- Pattern in WHERE WAS -questions (where:was:person:before/after:the:location:?)
+answerWhereWas :: Foldable t => [String] -> t String -> Maybe String
 answerWhereWas (_:_:person:time:_:location:_) story = 
   if time `elem` ["before"]
   then (foldl (\answer statement -> whereWas statement answer) Nothing story)
@@ -104,9 +101,9 @@ answerWhereWas _ _ = Nothing
 
 
 
--- TODO: TYPE SIGNATURE
 -- Pattern in HOW MANY -questions (how:many:objects:is:person:carrying:?)
 -- Verbs: took, got, discarded, picked & HANDED to
+answerHowMany :: (Foldable t, Num b, Eq b) => [String] -> t String -> Maybe b
 answerHowMany (_:_:_:_:person:_:_) story = 
   foldl (\answer statement -> 
     let stm@(name:verb:_:_:_) = words $ map toLower statement
@@ -148,9 +145,10 @@ getStory = do
   return $ lines file
 
 prettyPrintList :: [String] -> IO ()
-prettyPrintList []     = do putStrLn "> END OF STORY.\n"
-prettyPrintList (x:xs) = do putStrLn ("  " ++ x)
-                            prettyPrintList xs
+prettyPrintList xs = do putStrLn "\n> THE STORY:"; prettyPrintList' xs
+  where prettyPrintList' []     = do putStrLn "> END OF STORY.\n"
+        prettyPrintList' (x:xs) = do putStrLn ("  " ++ x)
+                                     prettyPrintList' xs
 
 maybe2string :: Show a => Maybe a -> String
 maybe2string Nothing = "don't know"
