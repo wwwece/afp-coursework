@@ -28,7 +28,7 @@ askQuestions story = do
 answer question@(word1:word2:_) story
   | w1 == "is"                    = putStrLn $ answerIs question story
   | w1 == "where" && w2 == "is"   = putStrLn $ answerWhereIs question story
-  | w1 == "where" && w2 == "was"  = putStrLn $ answerWhereWas question story
+  | w1 == "where" && w2 == "was"  = putStrLn $ maybeStr2string $ answerWhereWas question story
   | w1 == "how"   && w2 == "many" = putStrLn $ maybe2string $ answerHowMany question story
   | w1 == "how"   && w2 == "do"   = putStrLn $ answerHowDoYouGo question story
   | otherwise                     = putStrLn "I don't understand!"
@@ -83,7 +83,27 @@ answerWhereIs _ _ = "don't know"
 
 -- TODO: TYPE SIGNATURE
 -- Pattern in WHERE WAS -questions (where:was:person:before/after:location:?)
-answerWhereWas (_:_:person:time:location:_) story = "TODO (Where was...)"
+answerWhereWas (_:_:person:time:_:location:_) story = 
+  if time `elem` ["before"]
+  then (foldl (\answer statement -> whereWas statement answer) Nothing story)
+  else if time `elem` ["after"]
+       then (foldr (\statement answer -> whereWas statement answer) Nothing story)
+       else Nothing
+  where whereWas statement answer =
+          if answer == (Just "don't know") 
+          then (Just "don't know") 
+          else let (subject:verb:_:_:place:_) = words $ map toLower statement 
+                   person' = map toLower person
+               in if person' == subject
+                  then if location == place
+                       then if answer == Nothing
+                            then Just "don't know"
+                            else answer
+                       else Just place
+                  else answer
+answerWhereWas _ _ = Nothing
+
+
 
 -- TODO: TYPE SIGNATURE
 -- Pattern in HOW MANY -questions (how:many:objects:is:person:carrying:?)
@@ -136,6 +156,10 @@ prettyPrintList (x:xs) = do putStrLn ("  " ++ x)
 maybe2string :: Show a => Maybe a -> String
 maybe2string Nothing = "don't know"
 maybe2string (Just x) = show x
+
+maybeStr2string :: Maybe String -> String
+maybeStr2string Nothing = "don't know"
+maybeStr2string (Just x) = x
 
 
 
