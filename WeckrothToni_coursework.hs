@@ -20,7 +20,7 @@ askQuestions story = do
             askQuestions story
 
 
-answer :: Foldable t => [[Char]] -> t [Char] -> IO ()
+answer :: Foldable t => [String] -> t String -> IO ()
 answer question@(word1:word2:_) story
   | w1 == "is"                    = putStrLn $ answerIs question story
   | w1 == "where" && w2 == "is"   = putStrLn $ maybeStr2string $ answerWhereIs question story
@@ -106,10 +106,10 @@ answerWhereWas _ _ = Nothing
 answerHowMany :: (Foldable t, Num b, Eq b) => [String] -> t String -> Maybe b
 answerHowMany (_:_:_:_:person:_:_) story = 
   foldl (\answer statement -> 
-    let stm@(name:verb:_:_:_) = words $ map toLower statement
+    let (subject:verb:_:_:_) = words $ map toLower statement
         person' = map toLower person
         stmTail = last $ words $ map toLower statement
-    in  if person' == name
+    in  if person' == subject
         then countObject answer verb
         else if verb `elem` ["handed"] && person' == stmTail
              then if answer == Nothing 
