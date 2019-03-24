@@ -130,9 +130,8 @@ answerHowMany (_:_:_:_:person:_:_) story =
 answerHowMany _ _ = Nothing
 
 
--- TODO: TYPE SIGNATURE
 -- Pattern in HOW DO YOU GO -questions (how:do:you:go:from:the:location:to:the:location:?)
--- answerHowDoYouGo :: (Foldable t) => [String] -> t [Char] -> [(String, [Char])] -> [Char]
+answerHowDoYouGo :: Foldable t => [String] -> t String -> String
 answerHowDoYouGo (_:_:_:_:_:_:initialStartLoc:_:_:initialEndLoc:_) story = 
   intercalate ", " $ map (\(_,d) -> d) $ tail $ howToGo initialStartLoc initialEndLoc story [(initialStartLoc, "INIT")]
   where howToGo startLoc endLoc story answer = 
@@ -161,7 +160,7 @@ answerHowDoYouGo (_:_:_:_:_:_:initialStartLoc:_:_:initialEndLoc:_) story =
                                then answer ++ [("PATH_FOUND!", direction)]
                                else if storyLoc1 `elem` visitedPlaces 
                                     then if storyLoc1 == initialStartLoc
-                                         -- Look at comments above, same goes in here as well.
+                                         -- Look at the above comment, same goes in this block as well.
                                          then (answer)
                                          else (init answer)
                                     else howToGo storyLoc1 endLoc story (answer ++ [(storyLoc2, direction)])

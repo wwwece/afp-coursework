@@ -1,0 +1,22 @@
+
+SEARCH kitchen office = w[1] or w[6] == 'KITCHEN':
+                        -> go to hallway = east
+                        search (hallway)
+SEARCH hallway office = w[1] or w[6] == 'HALLWAY':
+                        -> go to office = north
+                        search (office office)      DONE! [east, north]
+
+SEARCH garden office = w[1] or w[6] == 'GARDEN':
+                        -> go to bedroom = NORTH
+                        search (bedroom office)
+SEARCH bedroom office = w[1] or w[6] == 'BEDROOM':
+                        -> go to bathroom = east
+                        search (bathroom office)
+SEARCH bathroom office = w[1] or w[6] == 'BATHROOM':
+                        -> NOT FOUND NEW PATH, RETURN
+SEARCH bedroom office = w[1] or w[6] == 'BEDROOM':
+                        -> go to hallway = WEST
+                        search (hallway office)
+SEARCH hallway office = w[1] or w[6] == 'HALLWAY':
+                        -> go to office = NORTH
+                        search (office office)    DONE [north, west, north]
