@@ -1,11 +1,12 @@
 import System.Environment
 import System.IO
 import Data.Char (toLower)
+import Data.List (intercalate)
 
 main :: IO ()
 main = do 
   story <- getStory
-  prettyPrintList story
+  prettyPrintStory story
   askQuestions story
 
 
@@ -131,7 +132,49 @@ answerHowMany _ _ = Nothing
 
 -- TODO: TYPE SIGNATURE
 -- Pattern in HOW DO YOU GO -questions (how:do:you:go:from:the:location:to:the:location:?)
-answerHowDoYouGo (_:_:_:_:_:_:location1:_:_:location2:_) story = "TODO (How do you go...)"
+-- answerHowDoYouGo :: (Foldable t) => [String] -> t [Char] -> [(String, [Char])] -> [Char]
+answerHowDoYouGo (_:_:_:_:_:_:initialStartLoc:_:_:initialEndLoc:_) story = 
+  intercalate ", " $ map (\(_,d) -> d) $ tail $ howToGo initialStartLoc initialEndLoc story [(initialStartLoc, "INIT")]
+  where howToGo startLoc endLoc story answer = 
+          foldl (\answer statement ->
+            if fst (last answer) == "PATH_FOUND!"
+            then answer
+            else let (_:storyLoc1:_:direction:_:_:storyLoc2:_) = words $ map toLower statement 
+                     visitedPlaces = map (\(place, _) -> place) answer
+                     -- lastVisitedPlace = fst $ last answer
+                 in  if startLoc == storyLoc1
+                     then if storyLoc2 == endLoc
+                          then answer ++ [("PATH_FOUND!", opposite direction)]
+                          else if storyLoc2 `elem` visitedPlaces
+                               then if storyLoc2 == initialStartLoc
+                                    -- This is not entirely working solution because of this if-then-else-block.
+                                    -- Comparision above is done against initialStartLoc and this results so that 
+                                    -- some correct "moves" that come after the first move might be forgetted 
+                                    -- from the path. Couldn't deduce when to return all of the answer-items 
+                                    -- ("directions") and when the last one can be forgetted (dead-end so to speak).
+                                    -- This passes the given tests though...
+                                    then (answer)
+                                    else (init answer)
+                               else howToGo storyLoc2 endLoc story (answer ++ [(storyLoc1, opposite direction)])
+                     else if startLoc == storyLoc2 
+                          then if storyLoc1 == endLoc
+                               then answer ++ [("PATH_FOUND!", direction)]
+                               else if storyLoc1 `elem` visitedPlaces 
+                                    then if storyLoc1 == initialStartLoc
+                                         -- Look at comments above, same goes in here as well.
+                                         then (answer)
+                                         else (init answer)
+                                    else howToGo storyLoc1 endLoc story (answer ++ [(storyLoc2, direction)])
+                          else answer            
+          ) answer story
+
+
+opposite :: String -> String
+opposite "west"  = "east"
+opposite "east"  = "west"
+opposite "north" = "south"
+opposite "south" = "north"
+opposite x       = x
 
 
 -- ----------------------- --
@@ -144,11 +187,11 @@ getStory = do
   file <- readFile $ head args
   return $ lines file
 
-prettyPrintList :: [String] -> IO ()
-prettyPrintList xs = do putStrLn "\n> THE STORY:"; prettyPrintList' xs
-  where prettyPrintList' []     = do putStrLn "> END OF STORY.\n"
-        prettyPrintList' (x:xs) = do putStrLn ("  " ++ x)
-                                     prettyPrintList' xs
+prettyPrintStory :: [String] -> IO ()
+prettyPrintStory xs = do putStrLn "\n> THE STORY:"; prettyPrintStory' xs
+  where prettyPrintStory' []     = do putStrLn "> END OF STORY.\n"
+        prettyPrintStory' (x:xs) = do putStrLn ("  " ++ x)
+                                      prettyPrintStory' xs
 
 maybe2string :: Show a => Maybe a -> String
 maybe2string Nothing = "don't know"
