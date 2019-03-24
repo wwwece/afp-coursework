@@ -36,22 +36,18 @@ answer question@(word1:word2:_) story
 -- Pattern in IS-questions: (is:name:in:the:location:?)
 answerIs :: Foldable t => [String] -> t String -> String
 answerIs (_:name:_:_:location:_) story = 
-  foldl (\answer statement -> 
-        let s     = words $ map toLower statement
-            name' = map toLower name 
-            loc   = map toLower location
-        in  if name' `elem` s
-            then if loc `elem` s && not ("no" `elem` s) && not ("either" `elem` s)
-                 then "yes" -- location found without negation or either statement
-                 else if ("no" `elem` s && loc `elem` s) || (not ("no" `elem` s) && not ("either" `elem` s))
-                      then "no" -- not in this particular location OR in some other location
-                      else if "no" `elem` s && not (loc `elem` s)
-                           then "maybe" -- No longer in some other location, so can possibly be in this location.
-                           else if "either" `elem` s && loc `elem` s
-                                then "maybe" -- Is either in this location, or some other location
-                                else answer
-            else answer
+  foldl (\answer statement -> let statement' = (words $ map toLower statement) in
+        if (map toLower name) `elem` statement'
+        then checkConditions statement' (map toLower location) answer
+        else answer
   ) "maybe" story
+  where checkConditions stmt loc answer
+          | loc `elem` stmt && not ("no" `elem` stmt) && not ("either" `elem` stmt) = "yes"
+          | ("no" `elem` stmt && loc `elem` stmt)                                   = "no"
+          | (not ("no" `elem` stmt) && not ("either" `elem` stmt))                  = "no"
+          | "no" `elem` stmt && not (loc `elem` stmt)                               = "maybe"
+          | "either" `elem` stmt && loc `elem` stmt                                 = "maybe"
+          | otherwise = answer
 answerIs _ _ = "maybe"
 
 
@@ -98,8 +94,6 @@ answerWhereWas (_:_:person:time:_:location:_) story =
                             else answer
                        else Just place
                   else answer
-answerWhereWas _ _ = Nothing
-
 
 
 -- Pattern in HOW MANY -questions (how:many:objects:is:person:carrying:?)
@@ -118,15 +112,12 @@ answerHowMany (_:_:_:_:person:_:_) story =
                   else Just (+1) <*> answer
              else answer
   ) Nothing story
-  where countObject Nothing verb = countObject (Just 0) verb
-        countObject answer  verb = 
-          if verb `elem` ["discarded"] 
-          then Just (subtract 1) <*> answer
-          else if verb `elem` ["took", "got", "picked"]
-               then Just (+1) <*> answer
-               else if verb `elem` ["handed"]
-                    then Just (subtract 1) <*> answer
-                    else answer
+  where countObject answer verb 
+          | answer == Nothing                   = countObject (Just 0) verb
+          | verb `elem` ["took","got","picked"] = Just (+1)         <*> answer
+          | verb `elem` ["discarded"]           = Just (subtract 1) <*> answer
+          | verb `elem` ["handed"]              = Just (subtract 1) <*> answer
+          | otherwise = answer
 answerHowMany _ _ = Nothing
 
 
@@ -166,6 +157,7 @@ answerHowDoYouGo (_:_:_:_:_:_:initialStartLoc:_:_:initialEndLoc:_) story =
                                     else howToGo storyLoc1 endLoc story (answer ++ [(storyLoc2, direction)])
                           else answer            
           ) answer story
+answerHowDoYouGo _ _ = "don't know"
 
 
 opposite :: String -> String
@@ -199,4 +191,3 @@ maybe2string (Just x) = show x
 maybeStr2string :: Maybe String -> String
 maybeStr2string Nothing = "don't know"
 maybeStr2string (Just x) = x
-
