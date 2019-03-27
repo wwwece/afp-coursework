@@ -1,0 +1,17 @@
+Is Bill in the kitchen ?
+How many objects is John carrying ?
+Where was Fred before the hallway ?
+How many objects is Mary carrying ?
+How do you go from the garden to the hallway ?
+Is Sandra in the school ?
+How do you go from the hallway to the kitchen ?
+Where is the apple ?
+Where is the football ?
+Where was Bill after the kitchen ?
+Where was Mary after the garden ?
+Is Daniel in the hallway ?
+How many objects is Fred carrying ?
+Where is the milk ?
+Where was Sandra before the school ?
+Is John in the park ? 
+q

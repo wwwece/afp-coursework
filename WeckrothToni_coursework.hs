@@ -3,6 +3,13 @@ import System.IO
 import Data.Char (toLower)
 import Data.List (intercalate)
 
+           -- VOCABULARY:
+names      = ["sandra", "fred", "daniel", "bill", "mary", "john"] 
+locations  = ["kitchen", "hallway", "bathroom", "garden", "bedroom", "office", "school", "park", "cinema"] 
+items      = ["milk", "football", "apple"]
+item_verbs = ["took", "got", "picked", "handed", "dropped", "discarded"]
+
+
 main :: IO ()
 main = do 
   story <- getStory
@@ -10,7 +17,7 @@ main = do
   askQuestions story
 
 
-askQuestions :: Foldable t => t String -> IO ()
+askQuestions :: [String] -> IO ()
 askQuestions story = do
   putStr "ASK A QUESTION or (q)uit: "
   question <- getLine
@@ -21,16 +28,43 @@ askQuestions story = do
             askQuestions story
 
 
-answer :: Foldable t => [String] -> t String -> IO ()
+answer :: [String] -> [String] -> IO ()
 answer question@(word1:word2:_) story
-  | w1 == "is"                    = putStrLn $ answerIs question story
-  | w1 == "where" && w2 == "is"   = putStrLn $ maybeStr2string $ answerWhereIs question story
-  | w1 == "where" && w2 == "was"  = putStrLn $ maybeStr2string $ answerWhereWas question story
-  | w1 == "how"   && w2 == "many" = putStrLn $ maybe2string $ answerHowMany question story
-  | w1 == "how"   && w2 == "do"   = putStrLn $ answerHowDoYouGo question story
+  | w1 == "is"                    = putStrLn $ answerIs question (filter onlyPersonLocationStatements story)
+  | w1 == "where" && w2 == "is"   = putStrLn $ maybeStr2string $ answerWhereIs question (filter onlyPersonAndItemLocationStatements story)
+  | w1 == "where" && w2 == "was"  = putStrLn $ maybeStr2string $ answerWhereWas question (filter onlyPersonLocationStatements story)
+  | w1 == "how"   && w2 == "many" = putStrLn $ maybe2string $ answerHowMany question (filter onlyItemCountStatements story)
+  | w1 == "how"   && w2 == "do"   = putStrLn $ answerHowDoYouGo question (filter onlyDirectionStatements story)
   | otherwise                     = putStrLn "I don't understand!"
   where w1 = map toLower word1
         w2 = map toLower word2
+
+
+onlyPersonLocationStatements :: String -> Bool
+onlyPersonLocationStatements xs
+  | (length $ words xs) > 1 = let stmt@(w1:_) = words $ map toLower xs 
+                              in w1 `elem` names && last stmt `elem` locations
+  | otherwise = False
+
+onlyPersonAndItemLocationStatements :: String -> Bool
+onlyPersonAndItemLocationStatements xs
+  | (length $ words xs) > 2 = let stmt@(w1:w2:_) = words $ map toLower xs 
+                              in  w1 `elem` names 
+                                    && (last stmt `elem` locations || last stmt `elem` items) 
+                                      || w2 `elem` ["handed"]
+  | otherwise = False
+
+onlyItemCountStatements :: String -> Bool
+onlyItemCountStatements xs 
+  | (length $ words xs) > 2 = let stmt@(w1:w2:_) = words $ map toLower xs
+                              in  w1 `elem` names && w2 `elem` item_verbs 
+  | otherwise = False
+
+onlyDirectionStatements :: String -> Bool
+onlyDirectionStatements xs 
+  | (length $ words xs) > 2 = let stmt@(w1:w2:_) = words $ map toLower xs
+                              in  w1 == "the" && w2 `elem` locations && (last stmt `elem` locations)
+  | otherwise = False
 
 
 -- Pattern in IS-questions: (is:name:in:the:location:?)
@@ -45,8 +79,9 @@ answerIs (_:name:_:_:location:_) story =
           | loc `elem` stmt && not ("no" `elem` stmt) && not ("either" `elem` stmt) = "yes"
           | ("no" `elem` stmt && loc `elem` stmt)                                   = "no"
           | (not ("no" `elem` stmt) && not ("either" `elem` stmt))                  = "no"
-          | "no" `elem` stmt && not (loc `elem` stmt)                               = "maybe"
+          | "either" `elem` stmt && not (loc `elem` stmt)                           = "no"
           | "either" `elem` stmt && loc `elem` stmt                                 = "maybe"
+          | "no" `elem` stmt && not (loc `elem` stmt)                               = "maybe"
           | otherwise = answer
 answerIs _ _ = "maybe"
 
@@ -56,10 +91,12 @@ answerIs _ _ = "maybe"
 answerWhereIs :: Foldable t => [String] -> t String -> Maybe String
 answerWhereIs (_:_:_:item:_) story = 
   whereIsPerson (foldl (\person statement -> 
-                       let s = words $ map toLower statement
+                       let s@(_:verb:_) = words $ map toLower statement
                            item' = map toLower item
                        in  if item' `elem` s
-                           then Just (head $ words statement) -- Name of the person posessing the item
+                           then if verb `elem` ["handed"] 
+                                then Just (last $ words statement) -- Name of the person posessing the item
+                                else Just (head $ words statement) -- Name of the person posessing the item
                            else person
                 ) Nothing story) story
   where whereIsPerson Nothing     _     = Nothing
@@ -78,22 +115,24 @@ answerWhereIs _ _ = Nothing
 answerWhereWas :: Foldable t => [String] -> t String -> Maybe String
 answerWhereWas (_:_:person:time:_:location:_) story = 
   if time `elem` ["before"]
-  then (foldl (\answer statement -> whereWas statement answer) Nothing story)
+  then snd (foldl (\answer statement -> whereWas statement answer) (False, Nothing) story)
   else if time `elem` ["after"]
-       then (foldr (\statement answer -> whereWas statement answer) Nothing story)
+       then snd (foldr (\statement answer -> whereWas statement answer) (False, Nothing) story)
        else Nothing
-  where whereWas statement answer =
-          if answer == (Just "don't know") 
-          then (Just "don't know") 
-          else let (subject:verb:_:_:place:_) = words $ map toLower statement 
-                   person' = map toLower person
-               in if person' == subject
-                  then if location == place
-                       then if answer == Nothing
-                            then Just "don't know"
-                            else answer
-                       else Just place
-                  else answer
+  where whereWas statement (placeWasFound,answer) =
+          if placeWasFound == True
+          then (placeWasFound, answer)
+          else if answer == (Just "don't know") 
+               then (placeWasFound, answer) 
+               else let (subject:verb:_:_:place:_) = words $ map toLower statement 
+                        person' = map toLower person
+                    in if person' == subject
+                       then if location == place
+                            then if answer == Nothing
+                                 then (True, Just "don't know")
+                                 else (True, answer)
+                            else (placeWasFound, Just place)
+                       else (placeWasFound, answer)
 
 
 -- Pattern in HOW MANY -questions (how:many:objects:is:person:carrying:?)
@@ -113,10 +152,9 @@ answerHowMany (_:_:_:_:person:_:_) story =
              else answer
   ) Nothing story
   where countObject answer verb 
-          | answer == Nothing                   = countObject (Just 0) verb
-          | verb `elem` ["took","got","picked"] = Just (+1)         <*> answer
-          | verb `elem` ["discarded"]           = Just (subtract 1) <*> answer
-          | verb `elem` ["handed"]              = Just (subtract 1) <*> answer
+          | answer == Nothing                             = countObject (Just 0) verb
+          | verb `elem` ["took","got","picked"]           = Just (+1)         <*> answer
+          | verb `elem` ["discarded","dropped","handed"]  = Just (subtract 1) <*> answer
           | otherwise = answer
 answerHowMany _ _ = Nothing
 
