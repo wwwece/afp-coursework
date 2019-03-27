@@ -1,3 +1,8 @@
+-- Answer-functions for different types of questions.
+-- Gives an answer to a given question based on a given story.
+-- Calling the functions: 
+-- answerQuestionType questionBrokenIntoWords storyBrokenIntoStatements
+
 module AnswerMachine
 ( answerIs
 , answerWhereIs
@@ -31,7 +36,6 @@ answerIs _ _ = "maybe"
 
 
 -- Pattern in WHERE IS -questions (where:is:the:item:?)
--- Verbs: moved, went, journeyed
 answerWhereIs :: Foldable t => [String] -> t String -> String
 answerWhereIs (_:_:_:item:_) story = 
   maybeStr2string $ whereIsPerson (foldl (\person statement -> 
@@ -143,4 +147,3 @@ answerHowDoYouGo (_:_:_:_:_:_:initialStartLoc:_:_:initialEndLoc:_) story =
                 opposite "south" = "north"
                 opposite x       = x
 answerHowDoYouGo _ _ = "don't know"
-

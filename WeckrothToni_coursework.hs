@@ -5,6 +5,24 @@ import Helpers (getStory, prettyPrintStory)
 import StatementFilters
 import AnswerMachine
 
+-- Run program in terminal:
+--     runhaskell WeckrothToni_coursework.hs story.txt < input_questions.txt
+-- (Leave "< input_questions.txt" out and you can type the question one by one).
+
+-- Everything seems to work quite fine. Tasks 1-5, in my opinion, 
+-- should be well covered, but with Task 6 I had some challenges. 
+-- It's still passing the tests, though, and is "almost there", but 
+-- there's some parts that left me slighly unhappy. These issues are 
+-- commented/described inside the AnswerMachine.answerHowDoYouGo function.
+-- 
+-- Sometimes the program isn't that flexible/general so that some 
+-- statements/questions has to be exactly in a certain form to work. 
+-- This probably could have been done differently (in more general way) 
+-- but I guess my approach is enough to cover the requirements for 
+-- this assignment. At least all the tests are giving the correct answers!
+-- 
+-- Other than above small concerns, I feel happy with my work.
+
 
 main :: IO ()
 main = do 
