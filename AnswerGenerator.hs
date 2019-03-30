@@ -1,9 +1,9 @@
 -- Answer-functions for different types of questions.
 -- Gives an answer to a given question based on a given story.
--- Calling the functions: 
--- answerQuestionType questionBrokenIntoWords storyBrokenIntoStatements
+-- Calling-pattern for all of the functions: 
+-- answerQuestionType questionSplittedIntoWords storySplittedIntoStatements
 
-module AnswerMachine
+module AnswerGenerator
 ( answerIs
 , answerWhereIs
 , answerWhereWas
@@ -81,6 +81,7 @@ answerWhereWas (_:_:person:time:_:location:_) story = maybeStr2string $
                                  else (True, answer)
                             else (placeWasFound, Just place)
                        else (placeWasFound, answer)
+answerWhereWas _ _ = maybeStr2string Nothing
 
 
 -- Pattern in HOW MANY -questions (how:many:objects:is:person:carrying:?)
@@ -103,6 +104,7 @@ answerHowMany (_:_:_:_:person:_:_) story = maybe2string $
           | verb `elem` ["took","got","picked"]           = Just (+1)         <*> answer
           | verb `elem` ["discarded","dropped","handed"]  = Just (subtract 1) <*> answer
           | otherwise = answer
+answerHowMany _ _ = maybe2string (Nothing :: Maybe Int)
 
 
 -- Pattern in HOW DO YOU GO -questions (how:do:you:go:from:the:location:to:the:location:?)
@@ -126,7 +128,7 @@ answerHowDoYouGo (_:_:_:_:_:_:initialStartLoc:_:_:initialEndLoc:_) story =
                                     -- some correct "moves" that come after the first move might be forgetted 
                                     -- from the path. Couldn't deduce when to return all of the answer-items 
                                     -- ("directions") and when the last one can be forgetted (dead-end so to speak).
-                                    -- This passes the given tests though... :)
+                                    -- This still passes the given tests though... :)
                                     then (answer)
                                     else (init answer)
                                else howToGo storyLoc2 endLoc story (answer ++ [(storyLoc1, opposite direction)])
